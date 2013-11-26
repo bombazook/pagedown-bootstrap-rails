@@ -1,0 +1,36 @@
+Markdown.local = Markdown.local || {};
+Markdown.local.rails =
+    bold: "<%= I18n.t('markdown.bold').to_s %>" + " Ctrl+B"
+    boldexample: "<%= I18n.t('markdown.bold_example').to_s %>"
+
+    italic: "<%= I18n.t('markdown.italic').to_s %>" + " Ctrl+I"
+    italicexample: "<%= I18n.t('markdown.italic_example').to_s %>"
+
+    link: "<%= I18n.t('markdown.hyperlink').to_s %>" + " Ctrl+L"
+    linkdescription: "<%= I18n.t('markdown.hyperlink_description').to_s %>"
+    linkdialog: "<%= I18n.t('markdown.hyperlink_dialog').to_s %>"
+
+    quote: "<%= I18n.t('markdown.quote').to_s %>" + " Ctrl+Q"
+    quoteexample: "<%= I18n.t('markdown.quote_example').to_s %>"
+
+    code: "<%= I18n.t('markdown.code').to_s %>" + " Ctrl+K"
+    codeexample: "<%= I18n.t('markdown.code_example').to_s %>"
+
+    image: "<%= I18n.t('markdown.image').to_s %>" + " Ctrl+G"
+    imagedescription: "<%= I18n.t('markdown.image_description').to_s %>"
+    imagedialog: "<%= I18n.t('markdown.image_dialog').to_s %>"
+
+    olist: "<%= I18n.t('markdown.olist').to_s %>" + " Ctrl+O"
+    ulist: "<%= I18n.t('markdown.ulist').to_s %>" + " Ctrl+U"
+    litem: "<%= I18n.t('markdown.list_item').to_s %>"
+
+    heading: "<%= I18n.t('markdown.heading').to_s %>" + " Ctrl+H"
+    headingexample: "<%= I18n.t('markdown.heading_example').to_s %>"
+
+    hr:  "<%= I18n.t('markdown.hr').to_s %>" + " Ctrl+T"
+
+    undo: "<%= I18n.t('markdown.undo').to_s %>" + " Ctrl+Z"
+    redo: "<%= I18n.t('markdown.redo').to_s %>" + " Ctrl+Y"
+    redomac: "<%= I18n.t('markdown.redo').to_s %>" + " Ctrl+Shift+Z"
+
+    help: "<%= I18n.t('markdown.markdown_help').to_s %>"
