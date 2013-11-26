@@ -1333,7 +1333,7 @@
 
             var makeButton = function (id, title, icon, textOp, group) {
                 var button = document.createElement("button");
-                button.className = "btn";
+                button.className = "btn btn-default";
                 var buttonImage = document.createElement("i");
                 buttonImage.className = icon;
                 button.id = id + postfix;
@@ -1359,36 +1359,36 @@
             }
 
             group1 = makeGroup(1);
-            buttons.bold = makeButton("wmd-bold-button", "Bold - Ctrl+B", "icon-bold", bindCommand("doBold"), group1);
-            buttons.italic = makeButton("wmd-italic-button", "Italic - Ctrl+I", "icon-italic", bindCommand("doItalic"), group1);
+            buttons.bold = makeButton("wmd-bold-button", Markdown.local.rails.bold, "icon-bold", bindCommand("doBold"), group1);
+            buttons.italic = makeButton("wmd-italic-button", Markdown.local.rails.italic, "icon-italic", bindCommand("doItalic"), group1);
 
             group2 = makeGroup(2);
-            buttons.link = makeButton("wmd-link-button", "Link - Ctrl+L", "icon-globe", bindCommand(function (chunk, postProcessing) {
+            buttons.link = makeButton("wmd-link-button", Markdown.local.rails.link, "icon-globe", bindCommand(function (chunk, postProcessing) {
                 return this.doLinkOrImage(chunk, postProcessing, false);
             }), group2);
-            buttons.quote = makeButton("wmd-quote-button", "Blockquote - Ctrl+Q", "icon-quote-left", bindCommand("doBlockquote"), group2);
-            buttons.code = makeButton("wmd-code-button", "Code Sample - Ctrl+K", "icon-code", bindCommand("doCode"), group2);
-            buttons.image = makeButton("wmd-image-button", "Image - Ctrl+G", "icon-picture", bindCommand(function (chunk, postProcessing) {
+            buttons.quote = makeButton("wmd-quote-button", Markdown.local.rails.quote, "icon-quote-left", bindCommand("doBlockquote"), group2);
+            buttons.code = makeButton("wmd-code-button", Markdown.local.rails.code, "icon-code", bindCommand("doCode"), group2);
+            buttons.image = makeButton("wmd-image-button", Markdown.local.rails.image, "icon-picture", bindCommand(function (chunk, postProcessing) {
                 return this.doLinkOrImage(chunk, postProcessing, true);
             }), group2);
 
             group3 = makeGroup(3);
-            buttons.olist = makeButton("wmd-olist-button", "Numbered List - Ctrl+O", "icon-list-ol", bindCommand(function (chunk, postProcessing) {
+            buttons.olist = makeButton("wmd-olist-button", Markdown.local.rails.olist, "icon-list-ol", bindCommand(function (chunk, postProcessing) {
                 this.doList(chunk, postProcessing, true);
             }), group3);
-            buttons.ulist = makeButton("wmd-ulist-button", "Bulleted List - Ctrl+U", "icon-list", bindCommand(function (chunk, postProcessing) {
+            buttons.ulist = makeButton("wmd-ulist-button", Markdown.local.rails.ulist, "icon-list", bindCommand(function (chunk, postProcessing) {
                 this.doList(chunk, postProcessing, false);
             }), group3);
-            buttons.heading = makeButton("wmd-heading-button", "Heading - Ctrl+H", "icon-header", bindCommand("doHeading"), group3);
-            buttons.hr = makeButton("wmd-hr-button", "Horizontal Rule - Ctrl+R", "icon-hr-line", bindCommand("doHorizontalRule"), group3);
+            buttons.heading = makeButton("wmd-heading-button", Markdown.local.rails.heading, "icon-header", bindCommand("doHeading"), group3);
+            buttons.hr = makeButton("wmd-hr-button", Markdown.local.rails.hr, "icon-hr-line", bindCommand("doHorizontalRule"), group3);
 
             group4 = makeGroup(4);
-            buttons.undo = makeButton("wmd-undo-button", "Undo - Ctrl+Z", "icon-undo", null, group4);
+            buttons.undo = makeButton("wmd-undo-button", Markdown.local.rails.undo, "icon-undo", null, group4);
             buttons.undo.execute = function (manager) { if (manager) manager.undo(); };
 
             var redoTitle = /win/.test(nav.platform.toLowerCase()) ?
-                "Redo - Ctrl+Y" :
-                "Redo - Ctrl+Shift+Z"; // mac and other non-Windows platforms
+                Markdown.local.rails.redo :
+                Markdown.local.rails.redomac; // mac and other non-Windows platforms
 
             buttons.redo = makeButton("wmd-redo-button", redoTitle, "icon-share-alt", null, group4);
             buttons.redo.execute = function (manager) { if (manager) manager.redo(); };
@@ -1457,11 +1457,11 @@
     };
 
     commandProto.doBold = function (chunk, postProcessing) {
-        return this.doBorI(chunk, postProcessing, 2, "strong text");
+        return this.doBorI(chunk, postProcessing, 2, Markdown.local.rails.boldexample);
     };
 
     commandProto.doItalic = function (chunk, postProcessing) {
-        return this.doBorI(chunk, postProcessing, 1, "emphasized text");
+        return this.doBorI(chunk, postProcessing, 1, Markdown.local.rails.italicexample);
     };
 
     // chunk: The selected region that will be enclosed with */**
@@ -1745,7 +1745,7 @@
             });
 
         chunk.selection = chunk.selection.replace(/^(\s|>)+$/, "");
-        chunk.selection = chunk.selection || "Blockquote";
+        chunk.selection = chunk.selection || Markdown.local.rails.quoteexample;
 
         // The original code uses a regular expression to find out how much of the
         // text *directly before* the selection already was a blockquote:
@@ -1902,7 +1902,7 @@
 
             if (!chunk.selection) {
                 chunk.startTag = "    ";
-                chunk.selection = "enter code here";
+                chunk.selection = Markdown.local.rails.codeexample;
             }
             else {
                 if (/^[ ]{0,3}\S/m.test(chunk.selection)) {
@@ -1925,7 +1925,7 @@
             if (!chunk.startTag && !chunk.endTag) {
                 chunk.startTag = chunk.endTag = "`";
                 if (!chunk.selection) {
-                    chunk.selection = "enter code here";
+                    chunk.selection = Markdown.local.rails.codeexample;
                 }
             }
             else if (chunk.endTag && !chunk.startTag) {
@@ -2019,7 +2019,7 @@
             });
 
         if (!chunk.selection) {
-            chunk.selection = "List item";
+            chunk.selection = Markdown.local.rails.litem;
         }
 
         var prefix = getItemPrefix();
@@ -2051,7 +2051,7 @@
         // make a level 2 hash header around some default text.
         if (!chunk.selection) {
             chunk.startTag = "## ";
-            chunk.selection = "Heading";
+            chunk.selection = Markdown.local.rails.headingexample;
             chunk.endTag = " ##";
             return;
         }
