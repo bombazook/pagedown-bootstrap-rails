@@ -1,4 +1,4 @@
-//= require pagedown_bootstrap/localization
+#= require pagedown_bootstrap/localization
 
 $(document).ready ->
   $('textarea.wmd-input').each (i, input) ->
