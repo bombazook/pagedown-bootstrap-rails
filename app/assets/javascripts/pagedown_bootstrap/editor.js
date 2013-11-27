@@ -1106,24 +1106,48 @@
             return false;
         };
 
-
-
         // Create the text input box form/window.
         var createDialog = function () {
+            // <div class="modal" id="myModal">
+            //   <div class="modal-header">
+            //     <a class="close" data-dismiss="modal">×</a>
+            //     <h3>Modal header</h3>
+            //   </div>
+            //   <div class="modal-body">
+            //     <p>One fine body…</p>
+            //   </div>
+            //   <div class="modal-footer">
+            //     <a href="#" class="btn btn-primary">Save changes</a>
+            //     <a href="#" class="btn">Close</a>
+            //   </div>
+            // </div>
 
             // The main dialog box.
             dialog = doc.createElement("div");
-            dialog.className = "wmd-prompt-dialog";
-            dialog.style.padding = "10px;";
-            dialog.style.position = "fixed";
-            dialog.style.width = "400px";
-            dialog.style.zIndex = "1001";
+            dialog.className = "modal hide fade";
+            dialog.style.display = "none";
+
+            // The header.
+            var header = doc.createElement("div");
+            header.className = "modal-header";
+            header.innerHTML = '<a class="close" data-dismiss="modal">×</a> <h3>'+title+'</h3>';
+            dialog.appendChild(header);
+
+            // The body.
+            var body = doc.createElement("div");
+            body.className = "modal-body";
+            dialog.appendChild(body);
+
+            // The footer.
+            var footer = doc.createElement("div");
+            footer.className = "modal-footer";
+            dialog.appendChild(footer);
 
             // The dialog text.
-            var question = doc.createElement("div");
+            var question = doc.createElement("p");
             question.innerHTML = text;
             question.style.padding = "5px";
-            dialog.appendChild(question);
+            body.appendChild(question);
 
             // The web form container for the text box and buttons.
             var form = doc.createElement("form"),
@@ -1131,11 +1155,7 @@
             form.onsubmit = function () { return close(false); };
             style.padding = "0";
             style.margin = "0";
-            style.cssFloat = "left";
-            style.width = "100%";
-            style.textAlign = "center";
-            style.position = "relative";
-            dialog.appendChild(form);
+            body.appendChild(form);
 
             // The input text box
             input = doc.createElement("input");
@@ -1148,44 +1168,25 @@
             form.appendChild(input);
 
             // The ok button
-            var okButton = doc.createElement("input");
+            var okButton = doc.createElement("button");
+            okButton.className = "btn btn-primary";
             okButton.type = "button";
             okButton.onclick = function () { return close(false); };
-            okButton.value = "OK";
-            style = okButton.style;
-            style.margin = "10px";
-            style.display = "inline";
-            style.width = "7em";
-
+            okButton.innerHTML = "OK";
 
             // The cancel button
-            var cancelButton = doc.createElement("input");
+            var cancelButton = doc.createElement("button");
+            cancelButton.className = "btn btn-primary";
             cancelButton.type = "button";
             cancelButton.onclick = function () { return close(true); };
-            cancelButton.value = "Cancel";
-            style = cancelButton.style;
-            style.margin = "10px";
-            style.display = "inline";
-            style.width = "7em";
+            cancelButton.innerHTML = "Cancel";
 
-            form.appendChild(okButton);
-            form.appendChild(cancelButton);
+            footer.appendChild(okButton);
+            footer.appendChild(cancelButton);
 
             util.addEvent(doc.body, "keydown", checkEscape);
-            dialog.style.top = "50%";
-            dialog.style.left = "50%";
-            dialog.style.display = "block";
-            if (uaSniffed.isIE_5or6) {
-                dialog.style.position = "absolute";
-                dialog.style.top = doc.documentElement.scrollTop + 200 + "px";
-                dialog.style.left = "50%";
-            }
-            doc.body.appendChild(dialog);
 
-            // This has to be done AFTER adding the dialog to the form if you
-            // want it to be centered.
-            dialog.style.marginTop = -(position.getHeight(dialog) / 2) + "px";
-            dialog.style.marginLeft = -(position.getWidth(dialog) / 2) + "px";
+            doc.body.appendChild(dialog);
 
         };
 
@@ -1208,7 +1209,16 @@
                 range.select();
             }
 
-            input.focus();
+            $(dialog).on('shown', function () {
+                input.focus();
+            })
+            
+            $(dialog).on('hidden', function () {
+                dialog.parentNode.removeChild(dialog);
+            })
+
+            $(dialog).modal()
+
         }, 0);
     };
 
@@ -1376,32 +1386,8 @@
 
         function setupButton(button, isEnabled) {
 
-            var normalYShift = "0px";
-            var disabledYShift = "-20px";
-            var highlightYShift = "-40px";
-            var image = button.getElementsByTagName("span")[0];
             if (isEnabled) {
-                image.style.backgroundPosition = button.XShift + " " + normalYShift;
-                button.onmouseover = function () {
-                    image.style.backgroundPosition = this.XShift + " " + highlightYShift;
-                };
-
-                button.onmouseout = function () {
-                    image.style.backgroundPosition = this.XShift + " " + normalYShift;
-                };
-
-                // IE tries to select the background image "button" text (it's
-                // implemented in a list item) so we have to cache the selection
-                // on mousedown.
-                if (uaSniffed.isIE) {
-                    button.onmousedown = function () {
-                        if (doc.activeElement && doc.activeElement !== panels.input) { // we're not even in the input box, so there's no selection
-                            return;
-                        }
-                        panels.ieCachedRange = document.selection.createRange();
-                        panels.ieCachedScrollTop = panels.input.scrollTop;
-                    };
-                }
+                button.disabled = false;
 
                 if (!button.isHelp) {
                     button.onclick = function () {
@@ -1414,8 +1400,7 @@
                 }
             }
             else {
-                image.style.backgroundPosition = button.XShift + " " + disabledYShift;
-                button.onmouseover = button.onmouseout = button.onclick = function () { };
+                button.disabled = true;
             }
         }
 
@@ -1429,20 +1414,14 @@
 
             var buttonBar = panels.buttonBar;
 
-            var normalYShift = "0px";
-            var disabledYShift = "-20px";
-            var highlightYShift = "-40px";
-
             var buttonRow = document.createElement("ul");
             buttonRow.id = "wmd-button-row" + postfix;
             buttonRow.className = 'wmd-button-row';
             buttonRow = buttonBar.appendChild(buttonRow);
             var xPosition = 0;
-            var makeButton = function (id, title, XShift, textOp) {
+            var makeButton = function (id, title, textOp) {
                 var button = document.createElement("li");
                 button.className = "wmd-button";
-                button.style.left = xPosition + "px";
-                xPosition += 25;
                 var buttonImage = document.createElement("span");
                 button.id = id + postfix;
                 button.appendChild(buttonImage);
@@ -1459,38 +1438,37 @@
                 spacer.className = "wmd-spacer wmd-spacer" + num;
                 spacer.id = "wmd-spacer" + num + postfix;
                 buttonRow.appendChild(spacer);
-                xPosition += 25;
             }
 
-            buttons.bold = makeButton("wmd-bold-button", getString("bold"), "0px", bindCommand("doBold"));
-            buttons.italic = makeButton("wmd-italic-button", getString("italic"), "-20px", bindCommand("doItalic"));
+            buttons.bold = makeButton("wmd-bold-button", getString("bold"), bindCommand("doBold"));
+            buttons.italic = makeButton("wmd-italic-button", getString("italic"), bindCommand("doItalic"));
             makeSpacer(1);
-            buttons.link = makeButton("wmd-link-button", getString("link"), "-40px", bindCommand(function (chunk, postProcessing) {
+            buttons.link = makeButton("wmd-link-button", getString("link"), bindCommand(function (chunk, postProcessing) {
                 return this.doLinkOrImage(chunk, postProcessing, false);
             }));
-            buttons.quote = makeButton("wmd-quote-button", getString("quote"), "-60px", bindCommand("doBlockquote"));
-            buttons.code = makeButton("wmd-code-button", getString("code"), "-80px", bindCommand("doCode"));
-            buttons.image = makeButton("wmd-image-button", getString("image"), "-100px", bindCommand(function (chunk, postProcessing) {
+            buttons.quote = makeButton("wmd-quote-button", getString("quote"), bindCommand("doBlockquote"));
+            buttons.code = makeButton("wmd-code-button", getString("code"), bindCommand("doCode"));
+            buttons.image = makeButton("wmd-image-button", getString("image"), bindCommand(function (chunk, postProcessing) {
                 return this.doLinkOrImage(chunk, postProcessing, true);
             }));
             makeSpacer(2);
-            buttons.olist = makeButton("wmd-olist-button", getString("olist"), "-120px", bindCommand(function (chunk, postProcessing) {
+            buttons.olist = makeButton("wmd-olist-button", getString("olist"), bindCommand(function (chunk, postProcessing) {
                 this.doList(chunk, postProcessing, true);
             }));
-            buttons.ulist = makeButton("wmd-ulist-button", getString("ulist"), "-140px", bindCommand(function (chunk, postProcessing) {
+            buttons.ulist = makeButton("wmd-ulist-button", getString("ulist"), bindCommand(function (chunk, postProcessing) {
                 this.doList(chunk, postProcessing, false);
             }));
-            buttons.heading = makeButton("wmd-heading-button", getString("heading"), "-160px", bindCommand("doHeading"));
-            buttons.hr = makeButton("wmd-hr-button", getString("hr"), "-180px", bindCommand("doHorizontalRule"));
+            buttons.heading = makeButton("wmd-heading-button", getString("heading"), bindCommand("doHeading"));
+            buttons.hr = makeButton("wmd-hr-button", getString("hr"), bindCommand("doHorizontalRule"));
             makeSpacer(3);
-            buttons.undo = makeButton("wmd-undo-button", getString("undo"), "-200px", null);
+            buttons.undo = makeButton("wmd-undo-button", getString("undo"), null);
             buttons.undo.execute = function (manager) { if (manager) manager.undo(); };
 
             var redoTitle = /win/.test(nav.platform.toLowerCase()) ?
                 getString("redo") :
                 getString("redomac"); // mac and other non-Windows platforms
 
-            buttons.redo = makeButton("wmd-redo-button", redoTitle, "-220px", null);
+            buttons.redo = makeButton("wmd-redo-button", redoTitle, null);
             buttons.redo.execute = function (manager) { if (manager) manager.redo(); };
 
             if (helpOptions) {
@@ -1499,9 +1477,7 @@
                 helpButton.appendChild(helpButtonImage);
                 helpButton.className = "wmd-button wmd-help-button";
                 helpButton.id = "wmd-help-button" + postfix;
-                helpButton.XShift = "-240px";
                 helpButton.isHelp = true;
-                helpButton.style.right = "0px";
                 helpButton.title = getString("help");
                 helpButton.onclick = helpOptions.handler;
 

@@ -120,7 +120,7 @@
     });
     return text;
   }
-
+  
   function slugify(text) {
     return text.toLowerCase()
     .replace(/\s+/g, '-') // Replace spaces with -
@@ -144,7 +144,7 @@
     // Stores html blocks we generate in hooks so that
     // they're not destroyed if the user is using a sanitizing converter
     this.hashBlocks = [];
-
+    
     // Stores footnotes
     this.footnotes = {};
     this.usedFootnotes = [];
@@ -173,19 +173,20 @@
     options = options || {};
     options.extensions = options.extensions || ["all"];
     if (contains(options.extensions, "all")) {
-      options.extensions = ["tables", "fenced_code_gfm", "def_list", "attr_list", "footnotes"];
+      options.extensions = ["tables", "fenced_code_gfm", "def_list", "attr_list", "footnotes", "smartypants"];
     }
+    preBlockGamutTransformations.push("wrapHeaders");
     if (contains(options.extensions, "attr_list")) {
       postNormalizationTransformations.push("hashFcbAttributeBlocks");
       preBlockGamutTransformations.push("hashHeaderAttributeBlocks");
       postConversionTransformations.push("applyAttributeBlocks");
       extra.attributeBlocks = true;
     }
-    if (contains(options.extensions, "tables")) {
-      preBlockGamutTransformations.push("tables");
-    }
     if (contains(options.extensions, "fenced_code_gfm")) {
       postNormalizationTransformations.push("fencedCodeBlocks");
+    }
+    if (contains(options.extensions, "tables")) {
+      preBlockGamutTransformations.push("tables");
     }
     if (contains(options.extensions, "def_list")) {
       preBlockGamutTransformations.push("definitionLists");
@@ -195,7 +196,10 @@
       preBlockGamutTransformations.push("doFootnotes");
       postConversionTransformations.push("printFootnotes");
     }
-
+    if (contains(options.extensions, "smartypants")) {
+      postConversionTransformations.push("runSmartyPants");
+    }
+    
     converter.hooks.chain("postNormalization", function(text) {
       return extra.doTransform(postNormalizationTransformations, text) + '\n';
     });
@@ -248,7 +252,7 @@
   Markdown.Extra.prototype.hashExtraInline = function(block) {
     return '~X' + (this.hashBlocks.push(block) - 1) + 'X';
   };
-
+  
   // Replace placeholder blocks in `text` with their corresponding
   // html blocks in the hashBlocks array.
   Markdown.Extra.prototype.unHashExtraBlocks = function(text) {
@@ -267,6 +271,17 @@
     recursiveUnHash();
     return text;
   };
+  
+  // Wrap headers to make sure they won't be in def lists
+  Markdown.Extra.prototype.wrapHeaders = function(text) {
+    function wrap(text) {
+      return '\n' + text + '\n';
+    }
+    text = text.replace(/^.+[ \t]*\n=+[ \t]*\n+/gm, wrap);
+    text = text.replace(/^.+[ \t]*\n-+[ \t]*\n+/gm, wrap);
+    text = text.replace(/^\#{1,6}[ \t]*.+?[ \t]*\#*\n+/gm, wrap);
+    return text;
+  };
 
 
   /******************************************************************
@@ -282,7 +297,7 @@
     var hdrAttributesA = new RegExp("^(#{1,6}.*#{0,6})\\s+(" + attrBlock + ")[ \\t]*(\\n|0x03)", "gm");
     var hdrAttributesB = new RegExp("^(.*)\\s+(" + attrBlock + ")[ \\t]*\\n" +
       "(?=[\\-|=]+\\s*(\\n|0x03))", "gm"); // underline lookahead
-
+    
     var self = this;
     function attributeCallback(wholeMatch, pre, attr) {
       return '<p>~XX' + (self.hashBlocks.push(attr) - 1) + 'XX</p>\n' + pre + "\n";
@@ -292,7 +307,7 @@
     text = text.replace(hdrAttributesB, attributeCallback);  // underline headers
     return text;
   };
-
+  
   // Extract FCB attribute blocks, move them above the element they will be
   // applied to, and hash them for later.
   Markdown.Extra.prototype.hashFcbAttributeBlocks = function(text) {
@@ -463,7 +478,7 @@
   /******************************************************************
    * Footnotes                                                      *
    *****************************************************************/
-
+  
   // Strip footnote, store in hashes.
   Markdown.Extra.prototype.stripFootnoteDefinitions = function(text) {
     var self = this;
@@ -480,7 +495,7 @@
 
     return text;
   };
-
+  
 
   // Find and convert footnotes references.
   Markdown.Extra.prototype.doFootnotes = function(text) {
@@ -494,7 +509,7 @@
       var id = slugify(m1);
       var footnote = self.footnotes[id];
       if (footnote === undefined) {
-        return "";
+        return wholeMatch;
       }
       footnoteCounter++;
       self.usedFootnotes.push(id);
@@ -533,8 +548,8 @@
     text += '</ol>\n</div>';
     return text;
   };
-
-
+  
+  
   /******************************************************************
   * Fenced Code Blocks  (gfm)                                       *
   ******************************************************************/
@@ -545,7 +560,7 @@
       code = code.replace(/&/g, "&amp;");
       code = code.replace(/</g, "&lt;");
       code = code.replace(/>/g, "&gt;");
-      // These were escaped by PageDown before postNormalization
+      // These were escaped by PageDown before postNormalization 
       code = code.replace(/~D/g, "$$");
       code = code.replace(/~T/g, "~");
       return code;
@@ -578,6 +593,73 @@
   };
 
 
+  /******************************************************************
+  * SmartyPants                                                     *
+  ******************************************************************/
+  
+  var educatePants = function(text) {
+    var result = '';
+    var blockOffset = 0;
+    // Here we parse HTML in a very bad manner
+    text.replace(/(<)([a-zA-Z1-6]+)([^\n]*?>)([\s\S]*?)(<\/\2>)/g, function(wholeMatch, m1, m2, m3, m4, m5, offset) {
+      result += applyPants(text.substring(blockOffset, offset));
+      blockOffset = offset + wholeMatch.length;
+      // Skip special tags
+      if(!/code|kbd|pre|script|noscript|iframe|math|ins|del|pre/i.test(m2)) {
+        m4 = educatePants(m4);
+      }
+      result += m1 + m2 + m3 + m4 + m5;
+    });
+    return result + applyPants(text.substring(blockOffset));
+  };
+    
+  function revertPants(wholeMatch, m1) {
+    var blockText = m1;
+    blockText = blockText.replace(/&\#8220;/g, "\"");
+    blockText = blockText.replace(/&\#8221;/g, "\"");
+    blockText = blockText.replace(/&\#8216;/g, "'");
+    blockText = blockText.replace(/&\#8217;/g, "'");
+    blockText = blockText.replace(/&\#8212;/g, "---");
+    blockText = blockText.replace(/&\#8211;/g, "--");
+    blockText = blockText.replace(/&\#8230;/g, "...");
+    return blockText;
+  }
+  
+  function applyPants(text) {
+    text = text.replace(/``/g, "&#8220;").replace (/''/g, "&#8221;");
+    text = text.replace(/---/g, "&#8212;").replace(/--/g, "&#8211;");
+    text = text.replace(/\.\.\./g, "&#8230;").replace(/\.\s\.\s\./g, "&#8230;");
+    
+    text = text.replace (/^'(?=[!"#\$\%'()*+,\-.\/:;<=>?\@\[\\]\^_`{|}~]\B)/g, "&#8216;");
+    text = text.replace (/^"(?=[!"#\$\%'()*+,\-.\/:;<=>?\@\[\\]\^_`{|}~]\B)/g, "&#8220;");
+    text = text.replace(/^"(?=\w)/g, "&#8220;");
+    text = text.replace(/^'(?=\w)/g, "&#8216;");
+
+    text = text.replace(/"'(?=\w)/g, "&#8220;&#8216;");
+    text = text.replace(/'"(?=\w)/g, "&#8216;&#8220;");
+
+    // Special case for decade abbreviations (the '80s):
+    text = text.replace(/'(?=\d{2}s)/g, "&#8217;");
+    text = text.replace(/(>|\t|\n|\s|&nbsp;|--|&[mn]dash;|&\#8211;|&\#8212;|&\#x201[34];)'(?=\w)/g, "$1&#8216;");
+    text = text.replace(/([^<>\\ \t\r\n\[\{\(\-])'(?=\s | s\b)/g, "$1&#8217;");
+
+    // Any remaining single quotes should be opening ones:
+    text = text.replace(/`/g, "&#8216;").replace(/'/g, "&#8217;");
+    text = text.replace(/(>|\t|\n|\s|&nbsp;|--|&[mn]dash;|&\#8211;|&\#8212;|&\#x201[34];)"(?=\w)/g, "$1&#8220;");
+    text = text.replace(/([^<>\\ \t\r\n\[\{\(\-])"(?=\s | s\b)/g, "$1&#8221;");
+    
+    text = text.replace(/"/ig, "&#8221;");
+    return text;
+  }
+
+  // Find and convert markdown extra definition lists into html.
+  Markdown.Extra.prototype.runSmartyPants = function(text) {
+    text = educatePants(text);
+    //clean everything inside html tags
+    text = text.replace(/(<([a-zA-Z1-6]+)\b([^\n>]*?)(\/)?>)/g, revertPants);
+    return text;
+  };
+  
   /******************************************************************
   * Definition Lists                                                *
   ******************************************************************/
