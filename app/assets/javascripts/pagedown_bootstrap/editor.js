@@ -1,5 +1,4 @@
 ﻿// needs Markdown.Converter.js at the moment
-$(document).ready( function () {
 (function () {
 
     var util = {},
@@ -2108,4 +2107,3 @@ $(document).ready( function () {
 
 
 })();
-});

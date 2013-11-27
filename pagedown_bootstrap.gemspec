@@ -11,7 +11,6 @@ Gem::Specification.new do |s|
   s.date = Time.now.strftime('%Y-%m-%d')
   s.require_paths = ['lib']
   s.add_dependency('railties', '> 3.1')
-  s.add_dependency('jquery-rails')
   s.files = Dir['{app,lib}/**/*'] + ['Readme.md']
   s.homepage = 'http://github.com/hughevans/pagedown-bootstrap-rails'
   s.license = 'MIT'
