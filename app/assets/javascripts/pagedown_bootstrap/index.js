@@ -1,5 +1,6 @@
-//= require pagedown_bootstrap/markdown.converter
-//= require pagedown_bootstrap/markdown.localization
-//= require pagedown_bootstrap/markdown.editor
-//= require pagedown_bootstrap/markdown.sanitizer
-//= require pagedown_bootstrap/markdown.extra
+//= require jquery
+//= require pagedown_bootstrap/converter
+//= require pagedown_bootstrap/localization
+//= require pagedown_bootstrap/editor
+//= require pagedown_bootstrap/sanitizer
+//= require pagedown_bootstrap/extra
