@@ -1,5 +1,3 @@
-module PageDownBootstrap
-  module Rails
-    VERSION = "1.1.0"
-  end
+module PagedownBootstrap
+  VERSION = "1.1.0"
 end

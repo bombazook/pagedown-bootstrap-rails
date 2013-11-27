@@ -1,4 +1,4 @@
-module PageDownBootstrap
+module PagedownBootstrap
   class Engine < ::Rails::Engine
     engine_name "pagedown_bootstrap"
     initializer "add simple_form input if simple_form defined" do
