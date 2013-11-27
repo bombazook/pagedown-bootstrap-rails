@@ -1417,7 +1417,7 @@
             var buttonRow = document.createElement("ul");
             buttonRow.id = "wmd-button-row" + postfix;
             buttonRow.className = 'wmd-button-row';
-            buttonRow = buttonBar.appendChild(buttonRow);
+            buttonRow = buttonBar.insertBefore(buttonRow, buttonBar.firstChild);
             var xPosition = 0;
             var makeButton = function (id, title, textOp) {
                 var button = document.createElement("li");
