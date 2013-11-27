@@ -1426,7 +1426,6 @@
                 button.id = id + postfix;
                 button.appendChild(buttonImage);
                 button.title = title;
-                button.XShift = XShift;
                 if (textOp)
                     button.textOp = textOp;
                 setupButton(button, true);
