@@ -5,7 +5,9 @@ class PagedownInput < SimpleForm::Inputs::TextInput
     content_tag(:div, :id=> "wmd-button-bar-#{attribute_name}") do
       html = []
       html << @builder.text_area(attribute_name, input_html_options.merge(:class => 'wmd-input', :id => "wmd-input-#{attribute_name}"))
-      html << tag(:div, :id=>"wmd-preview-#{attribute_name}", :class=>"wmd-preview") if input_html_options[:preview]
+      if input_html_options[:preview]
+        html << content_tag(:div, :class => "form-group"){tag(:div, :id=>"wmd-preview-#{attribute_name}", :class=>"wmd-preview") }
+      end
       html.join("\n").html_safe
     end
   end
