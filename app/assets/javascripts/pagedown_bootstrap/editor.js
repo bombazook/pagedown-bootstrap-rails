@@ -26,6 +26,7 @@
 
         link: "Hyperlink <a> Ctrl+L",
         linkdescription: "enter link description here",
+        linkexample: "link text",
         linkdialog: "<p><b>Insert Hyperlink</b></p><p>http://example.com/ \"optional title\"</p>",
 
         quote: "Blockquote <blockquote> Ctrl+Q",
@@ -36,6 +37,7 @@
 
         image: "Image <img> Ctrl+G",
         imagedescription: "enter image description here",
+        imagealtexample: "image alternative text",
         imagedialog: "<p><b>Insert Image</b></p><p>http://example.com/images/diagram.jpg \"optional title\"<br><br>Need <a href='http://www.google.com/search?q=free+image+hosting' target='_blank'>free image hosting?</a></p>",
 
         olist: "Numbered List <ol> Ctrl+O",
@@ -1062,7 +1064,7 @@
     // callback: The function which is executed when the prompt is dismissed, either via OK or Cancel.
     //      It receives a single argument; either the entered text (if OK was chosen) or null (if Cancel
     //      was chosen).
-    ui.prompt = function (text, defaultInputText, callback) {
+    ui.prompt = function (title, inputLabel, inputPlaceholder, inputHelp, callback) {
 
         // These variables need to be declared at this level since they are used
         // in multiple functions.
@@ -1070,8 +1072,8 @@
         var input;         // The text box where you enter the hyperlink.
 
 
-        if (defaultInputText === undefined) {
-            defaultInputText = "";
+        if (inputPlaceholder === undefined) {
+            inputPlaceholder = "";
         }
 
         // Used as a keydown event handler. Esc dismisses the prompt.
@@ -1100,72 +1102,89 @@
                     text = 'http://' + text;
             }
 
-            dialog.parentNode.removeChild(dialog);
+            $(dialog).modal('hide');
 
             callback(text);
             return false;
         };
 
+
+
         // Create the text input box form/window.
         var createDialog = function () {
             // <div class="modal" id="myModal">
-            //   <div class="modal-header">
-            //     <a class="close" data-dismiss="modal">×</a>
-            //     <h3>Modal header</h3>
-            //   </div>
-            //   <div class="modal-body">
-            //     <p>One fine body…</p>
-            //   </div>
-            //   <div class="modal-footer">
-            //     <a href="#" class="btn btn-primary">Save changes</a>
-            //     <a href="#" class="btn">Close</a>
+            //   <div class="modal-dialog">
+            //      <div class="modal-content">
+            //          <div class="modal-header">
+            //              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            //              <h3 class="modal-title">Modal title</h3>
+            //          </div>
+            //          <div class="modal-body">
+            //              <p>One fine body…</p>
+            //          </div>
+            //          <div class="modal-footer">
+            //              <a href="#" class="btn btn-primary">Save changes</a>
+            //              <a href="#" class="btn">Close</a>
+            //          </div>
+            //      </div>
             //   </div>
             // </div>
 
             // The main dialog box.
             dialog = doc.createElement("div");
-            dialog.className = "modal hide fade";
+            dialog.className = "modal fade";
             dialog.style.display = "none";
+
+            var dialogContainer = doc.createElement("div");
+            dialogContainer.className = "modal-dialog";
+            dialog.appendChild(dialogContainer);
+
+            var dialogContent = doc.createElement("div");
+            dialogContent.className = "modal-content";
+            dialogContainer.appendChild(dialogContent);
 
             // The header.
             var header = doc.createElement("div");
             header.className = "modal-header";
-            header.innerHTML = '<a class="close" data-dismiss="modal">×</a> <h3>'+title+'</h3>';
-            dialog.appendChild(header);
+            header.innerHTML = '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button> <h3 class="modal-title">'+title+'</h3>';
+            dialogContent.appendChild(header);
 
             // The body.
             var body = doc.createElement("div");
             body.className = "modal-body";
-            dialog.appendChild(body);
+            dialogContent.appendChild(body);
 
             // The footer.
             var footer = doc.createElement("div");
             footer.className = "modal-footer";
-            dialog.appendChild(footer);
-
-            // The dialog text.
-            var question = doc.createElement("p");
-            question.innerHTML = text;
-            question.style.padding = "5px";
-            body.appendChild(question);
+            dialogContent.appendChild(footer);
 
             // The web form container for the text box and buttons.
-            var form = doc.createElement("form"),
-                style = form.style;
+            var form = doc.createElement("form");
             form.onsubmit = function () { return close(false); };
-            style.padding = "0";
-            style.margin = "0";
             body.appendChild(form);
 
             // The input text box
+            var formGroup = doc.createElement("div");
+            formGroup.className = "form-group";
+            form.appendChild(formGroup);
+
+            var label = doc.createElement("label");
+            label.htmlFor = "url-" + new Date().getTime();
+            label.innerHTML = inputLabel;
+            formGroup.appendChild(label);
+
             input = doc.createElement("input");
+            input.id = label.htmlFor;
             input.type = "text";
-            input.value = defaultInputText;
-            style = input.style;
-            style.display = "block";
-            style.width = "80%";
-            style.marginLeft = style.marginRight = "auto";
-            form.appendChild(input);
+            input.className = "form-control";
+            input.placeholder = inputPlaceholder;
+            formGroup.appendChild(input);
+
+            var helpBlock = doc.createElement("span");
+            helpBlock.className = "help-block";
+            helpBlock.innerHTML = inputHelp || '';
+            formGroup.appendChild(helpBlock);
 
             // The ok button
             var okButton = doc.createElement("button");
@@ -1176,7 +1195,7 @@
 
             // The cancel button
             var cancelButton = doc.createElement("button");
-            cancelButton.className = "btn btn-primary";
+            cancelButton.className = "btn btn-default";
             cancelButton.type = "button";
             cancelButton.onclick = function () { return close(true); };
             cancelButton.innerHTML = "Cancel";
@@ -1196,7 +1215,7 @@
 
             createDialog();
 
-            var defTextLen = defaultInputText.length;
+            var defTextLen = 0;
             if (input.selectionStart !== undefined) {
                 input.selectionStart = 0;
                 input.selectionEnd = defTextLen;
@@ -1211,11 +1230,11 @@
 
             $(dialog).on('shown', function () {
                 input.focus();
-            })
-            
+            });
+
             $(dialog).on('hidden', function () {
                 dialog.parentNode.removeChild(dialog);
-            })
+            });
 
             $(dialog).modal()
 
@@ -1707,8 +1726,6 @@
             // Marks up the link and adds the ref.
             var linkEnteredCallback = function (link) {
 
-                background.parentNode.removeChild(background);
-
                 if (link !== null) {
                     // (                          $1
                     //     [^\\]                  anything that's not a backslash
@@ -1738,24 +1755,22 @@
 
                     if (!chunk.selection) {
                         if (isImage) {
-                            chunk.selection = that.getString("imagedescription");
+                            chunk.selection = that.getString("imagealtexample");
                         }
                         else {
-                            chunk.selection = that.getString("linkdescription");
+                            chunk.selection = that.getString("linkexample");
                         }
                     }
                 }
                 postProcessing();
             };
 
-            background = ui.createBackground();
-
             if (isImage) {
                 if (!this.hooks.insertImageDialog(linkEnteredCallback))
-                    ui.prompt(this.getString("imagedialog"), imageDefaultText, linkEnteredCallback);
+                    ui.prompt(this.getString("imagedialog"), this.getString("image"), imageDefaultText, this.getString("imagedescription"), linkEnteredCallback);
             }
             else {
-                ui.prompt(this.getString("linkdialog"), linkDefaultText, linkEnteredCallback);
+                 ui.prompt(this.getString("linkdialog"), this.getString("link"), linkDefaultText, this.getString("linkdescription"), linkEnteredCallback);
             }
             return true;
         }
