@@ -1,5 +1,3 @@
-#= require pagedown_bootstrap/localization
-
 $(document).ready ->
   $('textarea.wmd-input').each (i, input) ->
     attr = $(input).attr('id').split('wmd-input')[1]
