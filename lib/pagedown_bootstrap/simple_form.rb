@@ -1,7 +1,7 @@
 class PagedownInput < SimpleForm::Inputs::TextInput
   include ActionView::Context
   include ActionView::Helpers::TagHelper
-  def input
+  def input wrapper_options
     content_tag(:div, :id => "wmd-button-bar-#{attribute_name}") do
       html = []
       html << @builder.text_area(attribute_name, input_html_options.merge(:class => 'wmd-input', :id => "wmd-input-#{attribute_name}"))
